@@ -4,6 +4,7 @@ import { FloralDecoration } from './FloralDecoration';
 import { GoldFrame } from './GoldFrame';
 import { EventDetails } from './EventDetails';
 import { QuranVerse } from './QuranVerse';
+import { formatGuestDisplayName } from '../../utils/individualCardExport';
 
 interface InvitationCardProps {
   data: InvitationData;
@@ -15,19 +16,7 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(
   ({ data, className = '', isExporting = false }, ref) => {
     // Format guest display name
     const guestDisplayName = React.useMemo(() => {
-      const trimmed = data.guestName.trim();
-      if (!trimmed) {
-        return null;
-      }
-
-      if (data.familyMode) {
-        return trimmed.toLowerCase().includes('family') ? trimmed : `${trimmed} Family`;
-      }
-
-      if (data.guestTitle && data.guestTitle !== 'None') {
-        return `${data.guestTitle} ${trimmed}`;
-      }
-      return trimmed;
+      return formatGuestDisplayName(data.guestName, data.guestTitle, data.familyMode) || null;
     }, [data.guestName, data.guestTitle, data.familyMode]);
 
     return (

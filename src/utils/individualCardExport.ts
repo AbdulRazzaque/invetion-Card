@@ -1,0 +1,301 @@
+/**
+ * High-resolution canvas rendering and clipboard/download export for individual invitation cards.
+ * Uses a single source of truth configuration (GUEST_NAME_CONFIG) for both preview and export.
+ */
+
+export interface CardGuestNameConfig {
+  topPercent: number;
+  leftPercent: number;
+  maxWidthPercent: number;
+  textAlign: 'left' | 'center' | 'right';
+  fontFamily: string;
+  fontWeight: number;
+  color: string;
+  rotationDeg?: number;
+  baseFontSizePx: number;
+  previewFontSizeRem: string;
+  hasLabel?: boolean;
+  labelPrefix?: string;
+  labelColor?: string;
+}
+
+/**
+ * Dedicated positioning and styling configuration for each template card.
+ * Uses relative percentages for seamless responsive scaling across desktop, mobile, and export.
+ */
+export const GUEST_NAME_CONFIG: Record<1 | 2 | 3, CardGuestNameConfig> = {
+  1: {
+    // Card 1: Royal Blue Arabic Card (1024 x 558)
+    // Placed beside "اسم الضيف الكريم :" across the dotted line area (center at X=435, Y=176)
+    topPercent: 32.5, // 176 / 558 * 100
+    leftPercent: 42.50, // 435 / 1024 * 100
+    maxWidthPercent: 24.0,
+    textAlign: 'center',
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontWeight: 600,
+    color: '#F5DEB3', // Warm glowing metallic gold
+    rotationDeg: -8.5,
+    baseFontSizePx: 20.0,
+    previewFontSizeRem: 'clamp(0.72rem, 1.8vw, 0.95rem)',
+  },
+  2: {
+    // Card 2: Reception Ceremony Floral Card (460 x 610 / 2x: 920 x 1220)
+    // Placed in the dedicated blank whitespace between "With the blessings of Allah Almighty" and "You are cordially invited..."
+    topPercent: 38.20, // 233 / 610 * 100 (466 / 1220 * 100)
+    leftPercent: 50.0, // Centered
+    maxWidthPercent: 65.0,
+    textAlign: 'center',
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontWeight: 600,
+    color: '#4A361C', // Rich antique sepia / bronze
+    rotationDeg: 0,
+    // baseFontSizePx: 22.0, // 2x canvas (11px on 1x)
+    // previewFontSizeRem: 'clamp(0.85rem, 1.35vw, 0.80rem)',
+
+    baseFontSizePx: 22,
+    previewFontSizeRem: 'clamp(0.85rem, 2vw, 1.1rem)',
+    hasLabel: true,
+    labelPrefix: 'Guest Name: ',
+    labelColor: '#91773E',
+  },
+  3: {
+    // Card 3: Royal Blue English Invitation & Programs (1024 x 558)
+    // Sitting directly on the printed baseline underline right after "Guest Name: " (X=330, Y=170)
+    topPercent: 29.30, // 170 / 558 * 100
+    leftPercent: 35.22, // 330 / 1024 * 100
+    maxWidthPercent: 20.0,
+    textAlign: 'left',
+    fontFamily: '"Cormorant Garamond", Georgia, serif',
+    fontWeight: 600,
+    color: '#2B2018', // Deep espresso / bronze
+    rotationDeg: -2.5,
+    baseFontSizePx: 20.0,
+    previewFontSizeRem: 'clamp(0.72rem, 1.8vw, 0.95rem)',
+  },
+};
+
+export interface ExportCardOptions {
+  guestName?: string;
+  guestTitle?: string;
+  familyMode?: boolean;
+}
+
+export const formatGuestDisplayName = (
+  guestName = '',
+  guestTitle = '',
+  familyMode = false
+): string => {
+  const trimmed = guestName.trim();
+  if (!trimmed) return '';
+
+  if (familyMode) {
+    return trimmed.toLowerCase().includes('family') ? trimmed : `${trimmed} Family`;
+  }
+
+  // If user already typed an honorific/title in the name input (e.g., "Mr.", "Mrs.", "Dr.", "Mr. & Mrs.")
+  const hasExistingTitle = /^(mr\.|mrs\.|ms\.|miss|dr\.|prof\.|shaikh|shaykh|janab|engr\.|mr\s*&\s*mrs\.?)/i.test(
+    trimmed
+  );
+
+  if (hasExistingTitle) {
+    return trimmed;
+  }
+
+  if (guestTitle && guestTitle !== 'None') {
+    // Avoid repeating if the name starts with the selected guestTitle
+    if (trimmed.toLowerCase().startsWith(guestTitle.toLowerCase())) {
+      return trimmed;
+    }
+    return `${guestTitle} ${trimmed}`;
+  }
+
+  return trimmed;
+};
+
+/**
+ * Loads an image with CORS handling.
+ */
+const loadImage = (src: string): Promise<HTMLImageElement> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+    img.src = src;
+  });
+};
+
+/**
+ * Generates an Ultra HD PNG Blob for a specific invitation card (1, 2, or 3)
+ * with the guest name drawn cleanly at its exact design coordinates from GUEST_NAME_CONFIG.
+ */
+export const generateIndividualCardBlob = async (
+  cardId: 1 | 2 | 3,
+  options: ExportCardOptions = {}
+): Promise<Blob> => {
+  if (typeof document !== 'undefined' && document.fonts && document.fonts.ready) {
+    await document.fonts.ready;
+  }
+
+  const displayName = formatGuestDisplayName(
+    options.guestName,
+    options.guestTitle,
+    options.familyMode
+  );
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas 2D context not available');
+
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+
+  const cfg = GUEST_NAME_CONFIG[cardId];
+
+  if (cardId === 1) {
+    // Card 1: Royal Blue Arabic Wedding Invitation (1024 x 558)
+    const img = await loadImage('/invitations/card-1.jpg');
+    canvas.width = 1024;
+    canvas.height = 558;
+    ctx.drawImage(img, 0, 0, 1024, 558);
+
+    if (displayName) {
+      const targetX = (cfg.leftPercent / 100) * 1024;
+      const targetY = (cfg.topPercent / 100) * 558;
+
+      let fontSize = cfg.baseFontSizePx;
+      if (displayName.length > 20) fontSize = cfg.baseFontSizePx * 0.88;
+      if (displayName.length > 26) fontSize = cfg.baseFontSizePx * 0.78;
+
+      ctx.save();
+      ctx.translate(targetX, targetY);
+      if (cfg.rotationDeg) {
+        ctx.rotate((cfg.rotationDeg * Math.PI) / 180);
+      }
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 1;
+      ctx.font = `600 ${fontSize}px ${cfg.fontFamily}`;
+      ctx.fillStyle = cfg.color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(displayName, 0, 0);
+      ctx.restore();
+    }
+  } else if (cardId === 2) {
+    // Card 2: Pastel Floral Reception Ceremony Card (460 x 610 / 2x canvas: 920 x 1220)
+    const img = await loadImage('/invitations/card-2.jpg');
+    canvas.width = 920;
+    canvas.height = 1220;
+    ctx.drawImage(img, 0, 0, 920, 1220);
+
+    if (displayName) {
+      const targetX = (cfg.leftPercent / 100) * 920;
+      const targetY = (cfg.topPercent / 100) * 1220;
+
+      let fontSize = cfg.baseFontSizePx;
+      if (displayName.length > 20) fontSize = cfg.baseFontSizePx * 0.88;
+      if (displayName.length > 26) fontSize = cfg.baseFontSizePx * 0.78;
+
+      ctx.save();
+      ctx.translate(targetX, targetY);
+
+      const labelText = 'Guest Name: ';
+      ctx.font = `italic 500 ${fontSize}px ${cfg.fontFamily}`;
+      const labelWidth = ctx.measureText(labelText).width;
+
+      ctx.font = `600 ${fontSize}px ${cfg.fontFamily}`;
+      const nameWidth = ctx.measureText(displayName).width;
+      const totalWidth = labelWidth + nameWidth;
+
+      const startX = -totalWidth / 2;
+
+      // Draw label in soft antique gold
+      ctx.font = `italic 500 ${fontSize}px ${cfg.fontFamily}`;
+      ctx.fillStyle = cfg.labelColor || '#91773E';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(labelText, startX, 0);
+
+      // Draw name in deep sepia / bronze
+      ctx.font = `600 ${fontSize}px ${cfg.fontFamily}`;
+      ctx.fillStyle = cfg.color;
+      ctx.fillText(displayName, startX + labelWidth, 0);
+
+      ctx.restore();
+    }
+  } else {
+    // Card 3: Royal Blue English Wedding Invitation with Other Programs (1024 x 558)
+    const img = await loadImage('/invitations/card-3.jpg');
+    canvas.width = 1024;
+    canvas.height = 558;
+    ctx.drawImage(img, 0, 0, 1024, 558);
+
+    if (displayName) {
+      const targetX = (cfg.leftPercent / 100) * 1024;
+      const targetY = (cfg.topPercent / 100) * 558 - 2;
+
+      let fontSize = cfg.baseFontSizePx;
+      if (displayName.length > 18) fontSize = cfg.baseFontSizePx * 0.88;
+      if (displayName.length > 24) fontSize = cfg.baseFontSizePx * 0.78;
+
+      ctx.save();
+      ctx.translate(targetX, targetY);
+      if (cfg.rotationDeg) {
+        ctx.rotate((cfg.rotationDeg * Math.PI) / 180);
+      }
+      ctx.font = `600 ${fontSize}px ${cfg.fontFamily}`;
+      ctx.fillStyle = cfg.color;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(displayName, 0, 0);
+      ctx.restore();
+    }
+  }
+
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error('Failed to create PNG blob from canvas'));
+      },
+      'image/png',
+      1.0
+    );
+  });
+};
+
+/**
+ * Copies a card PNG Blob directly to the system clipboard using the standard Clipboard API.
+ */
+export const copyCardBlobToClipboard = async (blob: Blob): Promise<void> => {
+  if (
+    typeof navigator === 'undefined' ||
+    !navigator.clipboard ||
+    !navigator.clipboard.write ||
+    typeof ClipboardItem === 'undefined'
+  ) {
+    throw new Error('Clipboard API with image support is not available in this browser.');
+  }
+
+  const clipboardItem = new ClipboardItem({
+    'image/png': blob,
+  });
+
+  await navigator.clipboard.write([clipboardItem]);
+};
+
+/**
+ * Triggers a download of the card PNG blob.
+ */
+export const downloadCardBlob = (blob: Blob, filename: string): void => {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};

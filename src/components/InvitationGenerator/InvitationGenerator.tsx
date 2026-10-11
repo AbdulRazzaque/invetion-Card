@@ -1,5 +1,15 @@
 import React, { useRef } from 'react';
-import { Download, Share2, CheckCircle2, Info, AlertTriangle, X, Sparkles } from 'lucide-react';
+import {
+  Copy,
+  Check,
+  MessageCircle,
+  Loader2,
+  CheckCircle2,
+  Info,
+  AlertTriangle,
+  X,
+  Sparkles
+} from 'lucide-react';
 import { useInvitation } from '../../hooks/useInvitation';
 import { useImageExport } from '../../hooks/useImageExport';
 import { InvitationEditor } from './InvitationEditor';
@@ -12,11 +22,17 @@ export const InvitationGenerator: React.FC = () => {
   const {
     isExporting,
     isSharing,
+    copyingCardId,
+    copiedCardId,
+    cardErrorMessage,
     toast,
     setToast,
+    copyIndividualCard,
+    downloadIndividualCard,
     downloadCard,
     shareCard,
     handleWhatsApp,
+    handleWhatsAppDirect,
     handleCopy,
     handlePrint,
     triggerCelebration,
@@ -59,7 +75,7 @@ export const InvitationGenerator: React.FC = () => {
             <button
               type="button"
               onClick={() => setToast(null)}
-              className="text-[#968677] hover:text-[#382B20] p-1 rounded"
+              className="text-[#968677] hover:text-[#382B20] p-1 rounded cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -81,17 +97,19 @@ export const InvitationGenerator: React.FC = () => {
           </div>
 
           <h1 className="font-cormorant font-bold text-2xl sm:text-3xl md:text-4xl text-[#34281E] tracking-wide">
-            Create Your Personalized Invitation
+            Wedding Invitation Suite & Generator
           </h1>
           
           <p className="font-sans text-[13px] sm:text-[14.5px] text-[#6E5F52] mt-1.5 max-w-xl">
-            Enter your guest's name and create a beautiful luxury invitation ready to share.
+            Type your guest's name below to personalize all 3 invitation cards, then copy or share each card independently.
           </p>
 
-          <div className="flex items-center gap-2 mt-2 text-[11px] font-sans font-medium text-[#8C6D27] bg-[#F7EFE1] px-3 py-1 rounded-full border border-[#DFC48A]/40">
-            <span>✨ 100% Client-Side Private Generator</span>
+          <div className="flex items-center gap-2 mt-2 text-[11px] font-sans font-medium text-[#8C6D27] bg-[#F7EFE1] px-3 py-1 rounded-full border border-[#DFC48A]/40 flex-wrap justify-center">
+            <span>✨ Real-Time Guest Personalization</span>
             <span>•</span>
-            <span>Ultra HD Download</span>
+            <span>📋 Independent One-Click Copy Per Card</span>
+            <span>•</span>
+            <span>Ultra HD PNG</span>
           </div>
         </div>
       </header>
@@ -101,11 +119,11 @@ export const InvitationGenerator: React.FC = () => {
           Desktop: 2-column (Left: Editor, Right: Preview)
           Mobile: Preview first, Editor below
       ================================================== */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 pb-24 lg:pb-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 pb-28 lg:pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           
           {/* LEFT COLUMN ON DESKTOP / BOTTOM ON MOBILE: EDITOR */}
-          <section className="order-2 lg:order-1 lg:col-span-6 xl:col-span-5 space-y-6">
+          <section className="order-2 lg:order-1 lg:col-span-5 xl:col-span-5 space-y-6">
             <InvitationEditor
               data={data}
               updateField={updateField}
@@ -122,12 +140,18 @@ export const InvitationGenerator: React.FC = () => {
             />
           </section>
 
-          {/* RIGHT COLUMN ON DESKTOP / TOP ON MOBILE: PREVIEW */}
-          <section className="order-1 lg:order-2 lg:col-span-6 xl:col-span-7 flex flex-col items-center lg:sticky lg:top-6">
+          {/* RIGHT COLUMN ON DESKTOP / TOP ON MOBILE: 3 INDEPENDENT CARDS PREVIEW */}
+          <section className="order-1 lg:order-2 lg:col-span-7 xl:col-span-7 flex flex-col items-center lg:sticky lg:top-6">
             <InvitationPreview
               data={data}
               cardRef={cardRef}
               isExporting={isExporting}
+              copyingCardId={copyingCardId}
+              copiedCardId={copiedCardId}
+              cardErrorMessage={cardErrorMessage}
+              onCopyCard={(cardId) => copyIndividualCard(cardId, data)}
+              onDownloadCard={(cardId) => downloadIndividualCard(cardId, data)}
+              onWhatsAppDirect={handleWhatsAppDirect}
             />
           </section>
 
@@ -137,25 +161,87 @@ export const InvitationGenerator: React.FC = () => {
       {/* ==================================================
           STICKY BOTTOM BAR FOR MOBILE SCREENS
       ================================================== */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FAF7F2]/95 backdrop-blur-md border-t border-[#DFC48A]/60 p-3 shadow-lg flex items-center gap-3">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FAF7F2]/95 backdrop-blur-md border-t border-[#DFC48A]/60 p-2.5 shadow-lg flex items-center gap-2">
         <button
           type="button"
-          onClick={handleDownload}
-          disabled={isExporting}
-          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-sans font-medium text-[14px] text-white bg-gradient-to-r from-[#8A6725] to-[#A88235] shadow-sm disabled:opacity-60"
+          onClick={() => copyIndividualCard(1, data)}
+          disabled={copyingCardId === 1}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl font-sans font-medium text-[12.5px] text-white bg-gradient-to-r from-[#8A6725] to-[#A88235] shadow-sm disabled:opacity-60 cursor-pointer active:scale-[0.98]"
         >
-          <Download className="w-4 h-4" />
-          <span>{isExporting ? 'Saving...' : 'Download PNG'}</span>
+          {copyingCardId === 1 ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+              <span>Copying...</span>
+            </>
+          ) : copiedCardId === 1 ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-300" />
+              <span>✓ Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5 text-white" />
+              <span>📋 Card 1</span>
+            </>
+          )}
         </button>
 
         <button
           type="button"
-          onClick={handleShare}
-          disabled={isSharing || isExporting}
-          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-sans font-medium text-[14px] text-[#423214] bg-[#F7F0DE] border border-[#D5C299] shadow-sm disabled:opacity-60"
+          onClick={() => copyIndividualCard(2, data)}
+          disabled={copyingCardId === 2}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl font-sans font-medium text-[12.5px] text-white bg-gradient-to-r from-[#8A6725] to-[#A88235] shadow-sm disabled:opacity-60 cursor-pointer active:scale-[0.98]"
         >
-          <Share2 className="w-4 h-4 text-[#8A6725]" />
-          <span>Share</span>
+          {copyingCardId === 2 ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+              <span>Copying...</span>
+            </>
+          ) : copiedCardId === 2 ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-300" />
+              <span>✓ Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5 text-white" />
+              <span>📋 Card 2</span>
+            </>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => copyIndividualCard(3, data)}
+          disabled={copyingCardId === 3}
+          className="flex-1 flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl font-sans font-medium text-[12.5px] text-white bg-gradient-to-r from-[#8A6725] to-[#A88235] shadow-sm disabled:opacity-60 cursor-pointer active:scale-[0.98]"
+        >
+          {copyingCardId === 3 ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+              <span>Copying...</span>
+            </>
+          ) : copiedCardId === 3 ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-300" />
+              <span>✓ Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5 text-white" />
+              <span>📋 Card 3</span>
+            </>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleWhatsAppDirect}
+          className="flex items-center justify-center gap-1.5 py-3 px-3 rounded-xl font-sans font-medium text-[12.5px] text-[#1E5E3A] bg-[#E9F6EE] border border-[#BDE0CB] shadow-sm cursor-pointer active:scale-[0.98]"
+          title="Open WhatsApp"
+        >
+          <MessageCircle className="w-4 h-4 text-[#25D366]" />
+          <span>WhatsApp</span>
         </button>
       </div>
 
