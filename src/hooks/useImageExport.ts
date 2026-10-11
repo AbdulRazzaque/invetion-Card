@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import confetti from 'canvas-confetti';
-import { exportInvitationAsPng } from '../utils/exportInvitation';
+import { exportInvitationAsPng, getInvitationBlob } from '../utils/exportInvitation';
 import { shareInvitationNative, shareViaWhatsApp, copyInvitationText } from '../utils/shareInvitation';
 import {
   generateIndividualCardBlob,
@@ -65,11 +65,21 @@ export const useImageExport = () => {
         setCopyingCardId(cardId);
         setCardErrorMessage((prev) => ({ ...prev, [cardId]: null }));
 
-        const blob = await generateIndividualCardBlob(cardId, {
-          guestName: data.guestName,
-          guestTitle: data.guestTitle,
-          familyMode: data.familyMode,
-        });
+        let blob: Blob | null = null;
+        if (cardId === 2) {
+          const cardElement = document.getElementById('wedding-invitation-card');
+          if (cardElement) {
+            blob = await getInvitationBlob(cardElement, { pixelRatio: 2.5, quality: 0.98 });
+          }
+        }
+
+        if (!blob) {
+          blob = await generateIndividualCardBlob(cardId, {
+            guestName: data.guestName,
+            guestTitle: data.guestTitle,
+            familyMode: data.familyMode,
+          });
+        }
 
         await copyCardBlobToClipboard(blob);
 
@@ -104,11 +114,21 @@ export const useImageExport = () => {
   const downloadIndividualCard = useCallback(
     async (cardId: 1 | 2 | 3, data: InvitationData) => {
       try {
-        const blob = await generateIndividualCardBlob(cardId, {
-          guestName: data.guestName,
-          guestTitle: data.guestTitle,
-          familyMode: data.familyMode,
-        });
+        let blob: Blob | null = null;
+        if (cardId === 2) {
+          const cardElement = document.getElementById('wedding-invitation-card');
+          if (cardElement) {
+            blob = await getInvitationBlob(cardElement, { pixelRatio: 2.5, quality: 0.98 });
+          }
+        }
+
+        if (!blob) {
+          blob = await generateIndividualCardBlob(cardId, {
+            guestName: data.guestName,
+            guestTitle: data.guestTitle,
+            familyMode: data.familyMode,
+          });
+        }
 
         const namePart = formatGuestDisplayName(data.guestName, data.guestTitle, data.familyMode)
           .toLowerCase()

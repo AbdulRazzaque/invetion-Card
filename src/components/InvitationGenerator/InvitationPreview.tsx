@@ -367,48 +367,16 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
                   </span>
                 </div>
 
-                {/* Card 2 Artwork with Dynamic Guest Name rendered in dedicated area */}
-                <div className="w-full relative rounded-xl overflow-hidden border border-[#DFC48A]/60 shadow-md bg-[#FAF7F2] aspect-[460/610]">
-                  <img
-                    src="/invitations/card-2.jpg"
-                    alt="Invitation 2 - Reception Ceremony Floral Card"
-                    className="w-full h-full object-cover block select-none pointer-events-none"
-                    loading="eager"
+                {/* Customizable Card 2: Reception Ceremony Floral Card */}
+                <div className="w-full flex justify-center">
+                  <InvitationCard
+                    ref={cardRef}
+                    data={data}
+                    isExporting={isExporting}
+                    className="rounded-xl border border-[#DFC48A]/60 shadow-md"
                   />
-
-                  {/* Dynamic Guest Name Overlay at GUEST_NAME_CONFIG[2] coordinates */}
-                  {guestDisplayName && (
-                    <div
-                      className="absolute pointer-events-none select-none flex items-center justify-center text-center px-1 overflow-hidden"
-                      style={{
-                        top: `${GUEST_NAME_CONFIG[2].topPercent}%`,
-                        left: `${GUEST_NAME_CONFIG[2].leftPercent}%`,
-                        maxWidth: `${GUEST_NAME_CONFIG[2].maxWidthPercent}%`,
-                        transform: 'translate(-50%, -50%)',
-                      }}
-                    >
-                      <span
-                        className="font-cormorant font-semibold select-none whitespace-nowrap text-center tracking-wide"
-                        style={{
-                          color: GUEST_NAME_CONFIG[2].color,
-                          fontSize: GUEST_NAME_CONFIG[2].previewFontSizeRem,
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: GUEST_NAME_CONFIG[2].labelColor,
-                            fontStyle: 'italic',
-                            fontWeight: 500,
-                            marginRight: '4px',
-                          }}
-                        >
-                          Guest Name:{' '}
-                        </span>
-                        {guestDisplayName}
-                      </span>
-                    </div>
-                  )}
                 </div>
+
 
                 {/* ACTION BUTTONS SPECIFICALLY FOR INVITATION 2 */}
                 <div className="w-full mt-4 flex flex-col gap-2">

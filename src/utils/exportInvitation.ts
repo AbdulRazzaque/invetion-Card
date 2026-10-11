@@ -51,16 +51,36 @@ export const exportInvitationAsPng = async (
 
 export const getInvitationBlob = async (
   element: HTMLElement,
-  options: ExportOptions = { pixelRatio: 2, quality: 0.95 }
+  options: ExportOptions = { pixelRatio: 2.5, quality: 0.98 }
 ): Promise<Blob | null> => {
   if (document.fonts && document.fonts.ready) {
     await document.fonts.ready;
   }
-  await new Promise((resolve) => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 150));
 
-  return await toBlob(element, {
-    cacheBust: true,
-    pixelRatio: options.pixelRatio || 2,
-    quality: options.quality || 0.95,
-  });
+  try {
+    const dataUrl = await toPng(element, {
+      cacheBust: true,
+      pixelRatio: options.pixelRatio || 2.5,
+      quality: options.quality || 0.98,
+      style: {
+        transform: 'none',
+        margin: '0',
+      },
+    });
+    const res = await fetch(dataUrl);
+    return await res.blob();
+  } catch (err) {
+    console.warn('toPng blob fallback to toBlob:', err);
+    return await toBlob(element, {
+      cacheBust: true,
+      pixelRatio: options.pixelRatio || 2,
+      quality: options.quality || 0.95,
+      style: {
+        transform: 'none',
+        margin: '0',
+      },
+    });
+  }
 };
+
