@@ -47,18 +47,18 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(
         <GoldFrame />
 
         {/* Invitation Text Content Container */}
-        <div className="relative z-10 w-full h-full flex flex-col justify-between py-8 sm:py-10 px-8 sm:px-12 text-center">
+        <div className="relative z-10 w-full h-full flex flex-col justify-between py-6 sm:py-8 px-5 sm:px-8 text-center">
           
           {/* TOP SECTION: Bismillah & Blessings */}
-          <div className="space-y-1 sm:space-y-1.5 pt-1">
+          <div className="space-y-0.5 sm:space-y-1 pt-0.5">
             {data.bismillahText && (
-              <div className="font-arabic text-[#8A6D2B] text-[18px] sm:text-[22px] tracking-wide leading-tight drop-shadow-sm">
+              <div className="font-arabic text-[#8A6D2B] text-[17px] sm:text-[21px] tracking-wide leading-tight drop-shadow-sm">
                 {data.bismillahText}
               </div>
             )}
 
             {data.blessingText && (
-              <p className="font-cormorant italic text-[#725C26] text-[12px] sm:text-[13px] tracking-wider">
+              <p className="font-cormorant italic text-[#725C26] text-[11.5px] sm:text-[12.5px] tracking-wider">
                 {data.blessingText}
               </p>
             )}
@@ -74,49 +74,49 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(
           </div>
 
           {/* MAIN HEADER: Event Title */}
-          <div className="space-y-1">
-            <h1 className="font-cormorant font-semibold text-[#8B6B23] tracking-[0.2em] sm:tracking-[0.25em] text-[20px] sm:text-[24px] uppercase leading-tight">
+          <div className="space-y-0.5">
+            <h1 className="font-cormorant font-semibold text-[#8B6B23] tracking-[0.2em] sm:tracking-[0.25em] text-[19px] sm:text-[23px] uppercase leading-tight">
               {data.eventTitle || 'RECEPTION CEREMONY'}
             </h1>
             {data.subEventTitle && (
-              <p className="text-[12px] font-medium tracking-widest uppercase text-[#967B38]">
+              <p className="text-[11.5px] font-medium tracking-widest uppercase text-[#967B38]">
                 {data.subEventTitle}
               </p>
             )}
 
-            <div className="space-y-0.5 pt-1">
-              <p className="font-cormorant italic text-[#4A3F35] text-[12px] sm:text-[13px]">
+            <div className="space-y-0.5 pt-0.5">
+              <p className="font-cormorant italic text-[#4A3F35] text-[11.5px] sm:text-[12.5px] leading-tight">
                 {data.invitationIntro || 'You are cordially invited to attend'}
               </p>
-              <p className="font-cormorant italic text-[#4A3F35] text-[12px] sm:text-[13px]">
+              <p className="font-cormorant italic text-[#4A3F35] text-[11.5px] sm:text-[12.5px] leading-tight">
                 {data.receptionOfText || 'the Reception ceremony of'}
               </p>
             </div>
           </div>
 
           {/* GROOM & BRIDE NAMES */}
-          <div className="space-y-1 py-0.5">
-            <div className="font-cormorant font-bold text-[#6D4E12] tracking-wider text-[22px] sm:text-[26px] leading-tight">
-              <span>{data.groomName || 'ABDUSSAMAD'}</span>
-              <span className="font-script text-[20px] sm:text-[23px] font-normal lowercase mx-2 text-[#9E7B2F]">
+          <div className="py-0.5 space-y-0.5 sm:space-y-1">
+            <div className="flex items-center justify-center flex-wrap gap-x-2 gap-y-0.5 font-cormorant font-bold text-[#6D4E12] tracking-wide text-[18px] sm:text-[21px] leading-tight">
+              <span className="whitespace-nowrap">{data.groomName || 'ABDUSSAMAD'}</span>
+              <span className="font-script text-[18px] sm:text-[21px] font-normal lowercase mx-0.5 text-[#9E7B2F]">
                 and
               </span>
-              <span>{data.brideName || 'ABDUL AZIZ'}</span>
+              <span className="whitespace-nowrap">{data.brideName || 'ABDUL AZIZ'}</span>
             </div>
 
             {data.fatherName && (
-              <p className="font-cormorant text-[#5A4D43] text-[12px] sm:text-[13.5px] tracking-wide">
+              <p className="font-cormorant text-[#5A4D43] text-[11.5px] sm:text-[13px] tracking-wide mt-1">
                 {data.fatherName.startsWith('S/O') ? data.fatherName : `S/O ${data.fatherName}`}
               </p>
             )}
           </div>
 
           {/* PERSONALIZED GUEST HONOR BAR */}
-          <div className="my-0.5 py-1.5 px-4 rounded-lg bg-gradient-to-r from-transparent via-[#F7EFE1]/80 to-transparent border-y border-[#D4AF37]/30 max-w-[380px] mx-auto w-full transition-all duration-300">
-            <p className="text-[10px] sm:text-[11px] tracking-widest uppercase text-[#94721C] font-semibold mb-0.5">
+          <div className="my-0.5 py-1 px-3 sm:px-4 rounded-lg bg-gradient-to-r from-transparent via-[#F7EFE1]/80 to-transparent border-y border-[#D4AF37]/30 max-w-[390px] mx-auto w-full transition-all duration-300">
+            <p className="text-[9.5px] sm:text-[10.5px] tracking-widest uppercase text-[#94721C] font-semibold mb-0.5">
               Cordially Invited
             </p>
-            <div className="font-cormorant font-bold text-[17px] sm:text-[20px] text-[#4A3614] tracking-wide">
+            <div className="font-cormorant font-bold text-[16px] sm:text-[18px] text-[#4A3614] tracking-wide leading-snug">
               {guestDisplayName ? (
                 <span>
                   {data.familyMode ? '' : 'Dear '}
@@ -125,7 +125,7 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(
                   </span>
                 </span>
               ) : (
-                <span className="text-[#A39282] italic font-normal text-[15px] sm:text-[17px]">
+                <span className="text-[#A39282] italic font-normal text-[14px] sm:text-[16px]">
                   Dear [Guest Name]
                 </span>
               )}
