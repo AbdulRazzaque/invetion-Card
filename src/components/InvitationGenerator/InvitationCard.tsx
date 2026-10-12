@@ -4,16 +4,19 @@ import { FloralDecoration } from './FloralDecoration';
 import { GoldFrame } from './GoldFrame';
 import { EventDetails } from './EventDetails';
 import { QuranVerse } from './QuranVerse';
-import { formatGuestDisplayName } from '../../utils/individualCardExport';
+import { formatGuestDisplayName, CardGuestNameCustomization } from '../../utils/individualCardExport';
 
 interface InvitationCardProps {
   data: InvitationData;
   className?: string;
   isExporting?: boolean;
+  customization?: CardGuestNameCustomization;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
 export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(
-  ({ data, className = '', isExporting = false }, ref) => {
+  ({ data, className = '', isExporting = false, customization, isSelected = false, onSelect }, ref) => {
     // Format guest display name
     const guestDisplayName = React.useMemo(() => {
       return formatGuestDisplayName(data.guestName, data.guestTitle, data.familyMode) || null;
@@ -112,15 +115,46 @@ export const InvitationCard = forwardRef<HTMLDivElement, InvitationCardProps>(
           </div>
 
           {/* PERSONALIZED GUEST HONOR BAR */}
-          <div className="my-0.5 py-1 px-3 sm:px-4 rounded-lg bg-gradient-to-r from-transparent via-[#F7EFE1]/80 to-transparent border-y border-[#D4AF37]/30 max-w-[390px] mx-auto w-full transition-all duration-300">
+          <div
+            onClick={(e) => {
+              if (!isExporting && onSelect) {
+                e.stopPropagation();
+                onSelect();
+              }
+            }}
+            className={`my-0.5 py-1 px-3 sm:px-4 rounded-lg bg-gradient-to-r from-transparent via-[#F7EFE1]/80 to-transparent border-y border-[#D4AF37]/30 max-w-[390px] mx-auto w-full transition-all duration-300 ${
+              !isExporting && onSelect ? 'cursor-pointer hover:bg-[#F2E5C8]/40' : ''
+            } ${
+              isSelected && !isExporting
+                ? 'ring-2 ring-[#B89028] ring-offset-2 ring-offset-[#FAF7F2] bg-[#FAF0DD]/80 shadow-xs'
+                : ''
+            }`}
+          >
             <p className="text-[9.5px] sm:text-[10.5px] tracking-widest uppercase text-[#94721C] font-semibold mb-0.5">
               Cordially Invited
             </p>
-            <div className="font-cormorant font-bold text-[16px] sm:text-[18px] text-[#4A3614] tracking-wide leading-snug">
+            <div
+              className="font-cormorant font-bold text-[16px] sm:text-[18px] text-[#4A3614] tracking-wide leading-snug transition-transform duration-150"
+              style={{
+                fontSize: customization?.baseFontSizePx ? `${customization.baseFontSizePx}px` : undefined,
+                color: customization?.color || undefined,
+                transform: [
+                  customization?.leftPercent !== undefined || customization?.topPercent !== undefined
+                    ? `translate(${((customization?.leftPercent ?? 50) - 50) * 3}px, ${((customization?.topPercent ?? 38.2) - 38.2) * 3}px)`
+                    : '',
+                  customization?.rotationDeg ? `rotate(${customization.rotationDeg}deg)` : '',
+                ]
+                  .filter(Boolean)
+                  .join(' ') || undefined,
+              }}
+            >
               {guestDisplayName ? (
                 <span>
                   {data.familyMode ? '' : 'Dear '}
-                  <span className="text-[#7A5714] underline decoration-[#D4AF37]/40 decoration-1 underline-offset-4">
+                  <span
+                    className="underline decoration-[#D4AF37]/40 decoration-1 underline-offset-4"
+                    style={{ color: customization?.color || '#7A5714' }}
+                  >
                     {guestDisplayName}
                   </span>
                 </span>

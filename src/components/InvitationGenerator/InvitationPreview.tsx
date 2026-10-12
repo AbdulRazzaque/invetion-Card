@@ -57,10 +57,8 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [previewTab, setPreviewTab] = useState<'three-cards' | 'custom-card'>('three-cards');
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
-  const [card2Mode, setCard2Mode] = useState<'artwork' | 'html'>('artwork');
 
   const card1ContainerRef = useRef<HTMLDivElement>(null);
-  const card2ContainerRef = useRef<HTMLDivElement>(null);
   const card3ContainerRef = useRef<HTMLDivElement>(null);
 
   const guestDisplayName = formatGuestDisplayName(
@@ -387,77 +385,25 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
                     </h3>
                   </div>
 
-                  {/* Mode Selector for Card 2 */}
-                  <div className="flex items-center gap-1 bg-[#FAF0DD] p-0.5 rounded-lg border border-[#DFC48A]/40 text-[11px]">
-                    <button
-                      type="button"
-                      onClick={() => setCard2Mode('artwork')}
-                      className={`px-2 py-0.5 rounded font-medium transition-all cursor-pointer ${
-                        card2Mode === 'artwork'
-                          ? 'bg-[#8A6725] text-white shadow-xs'
-                          : 'text-[#8C6D27] hover:bg-[#F2E5C8]'
-                      }`}
-                    >
-                      Stationery Card
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setCard2Mode('html')}
-                      className={`px-2 py-0.5 rounded font-medium transition-all cursor-pointer ${
-                        card2Mode === 'html'
-                          ? 'bg-[#8A6725] text-white shadow-xs'
-                          : 'text-[#8C6D27] hover:bg-[#F2E5C8]'
-                      }`}
-                    >
-                      HTML Card
-                    </button>
-                  </div>
+                  <span className="text-[11px] font-sans font-medium px-2.5 py-0.5 rounded-full bg-[#FAF0DD] text-[#8C6D27] border border-[#DFC48A]/50">
+                    Customizable Card
+                  </span>
                 </div>
 
-                {/* 2-Column Responsive Body: Left Image & Actions, Right Controls */}
+                {/* 2-Column Responsive Body: Left Customizable Card & Actions, Right Controls */}
                 <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-5 sm:gap-6 items-start">
-                  {/* LEFT: Card 2 Artwork / HTML & Actions */}
+                  {/* LEFT: Card 2 Customizable Card & Actions */}
                   <div className="xl:col-span-7 flex flex-col gap-3">
                     <div className="w-full flex justify-center">
-                      {card2Mode === 'artwork' ? (
-                        <div
-                          ref={card2ContainerRef}
-                          className="w-full relative rounded-xl overflow-hidden border border-[#DFC48A]/60 shadow-md bg-[#FAF7F2] aspect-[920/1220] max-w-[460px] mx-auto cursor-default"
-                          onClick={() => setSelectedElement(null)}
-                        >
-                          <img
-                            src="/invitations/card-2.jpg"
-                            alt="Invitation 2 - Reception Ceremony Floral Card"
-                            className="w-full h-full object-cover block select-none pointer-events-none"
-                            loading="eager"
-                          />
-
-                          {guestDisplayName && (
-                            <DirectTextTransformer
-                              cardId={2}
-                              text={`Guest Name: ${guestDisplayName}`}
-                              customization={cardCustomizations[2]}
-                              defaultConfig={GUEST_NAME_CONFIG[2]}
-                              nativeWidth={920}
-                              nativeHeight={1220}
-                              onChange={(updated) => onCardCustomizationChange(2, updated)}
-                              onReset={() => onCardCustomizationReset(2)}
-                              isSelected={selectedElement === 'card-2-guest'}
-                              onSelect={() => setSelectedElement('card-2-guest')}
-                              onDeselect={() => setSelectedElement(null)}
-                              containerRef={card2ContainerRef}
-                              isExporting={isExporting}
-                            />
-                          )}
-                        </div>
-                      ) : (
-                        <InvitationCard
-                          ref={cardRef}
-                          data={data}
-                          isExporting={isExporting}
-                          className="rounded-xl border border-[#DFC48A]/60 shadow-md"
-                        />
-                      )}
+                      <InvitationCard
+                        ref={cardRef}
+                        data={data}
+                        customization={cardCustomizations[2]}
+                        isSelected={selectedElement === 'card-2-guest'}
+                        onSelect={() => setSelectedElement('card-2-guest')}
+                        isExporting={isExporting}
+                        className="rounded-xl border border-[#DFC48A]/60 shadow-md"
+                      />
                     </div>
 
                     {/* ACTION BUTTONS SPECIFICALLY FOR INVITATION 2 */}

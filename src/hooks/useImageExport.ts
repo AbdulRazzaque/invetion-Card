@@ -71,7 +71,7 @@ export const useImageExport = () => {
         setCardErrorMessage((prev) => ({ ...prev, [cardId]: null }));
 
         let blob: Blob | null = null;
-        if (cardId === 2 && !customization?.hasCustomPosition) {
+        if (cardId === 2) {
           const cardElement = document.getElementById('wedding-invitation-card');
           if (cardElement) {
             blob = await getInvitationBlob(cardElement, { pixelRatio: 2.5, quality: 0.98 });
@@ -125,7 +125,7 @@ export const useImageExport = () => {
     ) => {
       try {
         let blob: Blob | null = null;
-        if (cardId === 2 && !customization?.hasCustomPosition) {
+        if (cardId === 2) {
           const cardElement = document.getElementById('wedding-invitation-card');
           if (cardElement) {
             blob = await getInvitationBlob(cardElement, { pixelRatio: 2.5, quality: 0.98 });
