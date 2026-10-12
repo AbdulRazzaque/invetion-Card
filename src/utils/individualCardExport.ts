@@ -26,17 +26,17 @@ export interface CardGuestNameConfig {
 export const GUEST_NAME_CONFIG: Record<1 | 2 | 3, CardGuestNameConfig> = {
   1: {
     // Card 1: Royal Blue Arabic Card (1024 x 558)
-    // Placed beside "اسم الضيف الكريم :" across the dotted line area (center at X=435, Y=176)
-    topPercent: 32.5, // 176 / 558 * 100
-    leftPercent: 42.50, // 435 / 1024 * 100
-    maxWidthPercent: 24.0,
+    // Placed beside "اسم الضيف الكريم :" across the dotted line area (center at X=450, Y=175)
+    topPercent: 31.36, // 175 / 558 * 100
+    leftPercent: 43.95, // 450 / 1024 * 100
+    maxWidthPercent: 26.0,
     textAlign: 'center',
     fontFamily: '"Cormorant Garamond", Georgia, serif',
     fontWeight: 600,
-    color: '#F5DEB3', // Warm glowing metallic gold
-    rotationDeg: -8.5,
-    baseFontSizePx: 20.0,
-    previewFontSizeRem: 'clamp(0.72rem, 1.8vw, 0.95rem)',
+    color: '#FFFFFF',
+    rotationDeg: 9.0,
+    baseFontSizePx: 22.0,
+    previewFontSizeRem: 'clamp(0.72rem, 1.8vw, 1.05rem)',
   },
   2: {
     // Card 2: Reception Ceremony Floral Card (460 x 610 / 2x: 920 x 1220)
@@ -49,9 +49,6 @@ export const GUEST_NAME_CONFIG: Record<1 | 2 | 3, CardGuestNameConfig> = {
     fontWeight: 600,
     color: '#4A361C', // Rich antique sepia / bronze
     rotationDeg: 0,
-    // baseFontSizePx: 22.0, // 2x canvas (11px on 1x)
-    // previewFontSizeRem: 'clamp(0.85rem, 1.35vw, 0.80rem)',
-
     baseFontSizePx: 22,
     previewFontSizeRem: 'clamp(0.85rem, 2vw, 1.1rem)',
     hasLabel: true,
@@ -60,24 +57,38 @@ export const GUEST_NAME_CONFIG: Record<1 | 2 | 3, CardGuestNameConfig> = {
   },
   3: {
     // Card 3: Royal Blue English Invitation & Programs (1024 x 558)
-    // Sitting directly on the printed baseline underline right after "Guest Name: " (X=330, Y=170)
-    topPercent: 29.30, // 170 / 558 * 100
-    leftPercent: 35.22, // 330 / 1024 * 100
-    maxWidthPercent: 20.0,
+    // Sitting directly on the printed baseline underline right after "Guest Name: " (X=340, Y=170)
+    topPercent: 30.47, // 170 / 558 * 100
+    leftPercent: 33.20, // 340 / 1024 * 100
+    maxWidthPercent: 26.0,
     textAlign: 'left',
     fontFamily: '"Cormorant Garamond", Georgia, serif',
     fontWeight: 600,
     color: '#2B2018', // Deep espresso / bronze
-    rotationDeg: -2.5,
+    rotationDeg: -2.6,
     baseFontSizePx: 20.0,
-    previewFontSizeRem: 'clamp(0.72rem, 1.8vw, 0.95rem)',
+    previewFontSizeRem: 'clamp(0.68rem, 1.7vw, 0.95rem)',
   },
 };
+
+export interface CardGuestNameCustomization {
+  topPercent?: number;
+  leftPercent?: number;
+  maxWidthPercent?: number;
+  textAlign?: 'left' | 'center' | 'right';
+  fontFamily?: string;
+  fontWeight?: number;
+  color?: string;
+  rotationDeg?: number;
+  baseFontSizePx?: number;
+  hasCustomPosition?: boolean;
+}
 
 export interface ExportCardOptions {
   guestName?: string;
   guestTitle?: string;
   familyMode?: boolean;
+  customization?: CardGuestNameCustomization;
 }
 
 export const formatGuestDisplayName = (
@@ -150,7 +161,11 @@ export const generateIndividualCardBlob = async (
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
-  const cfg = GUEST_NAME_CONFIG[cardId];
+  const baseCfg = GUEST_NAME_CONFIG[cardId];
+  const cfg: CardGuestNameConfig = {
+    ...baseCfg,
+    ...(options.customization || {}),
+  };
 
   if (cardId === 1) {
     // Card 1: Royal Blue Arabic Wedding Invitation (1024 x 558)
@@ -164,21 +179,23 @@ export const generateIndividualCardBlob = async (
       const targetY = (cfg.topPercent / 100) * 558;
 
       let fontSize = cfg.baseFontSizePx;
-      if (displayName.length > 20) fontSize = cfg.baseFontSizePx * 0.88;
-      if (displayName.length > 26) fontSize = cfg.baseFontSizePx * 0.78;
+      if (!options.customization?.hasCustomPosition) {
+        if (displayName.length > 20) fontSize = cfg.baseFontSizePx * 0.88;
+        if (displayName.length > 26) fontSize = cfg.baseFontSizePx * 0.78;
+      }
 
       ctx.save();
       ctx.translate(targetX, targetY);
       if (cfg.rotationDeg) {
         ctx.rotate((cfg.rotationDeg * Math.PI) / 180);
       }
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.55)';
-      ctx.shadowBlur = 2;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.65)';
+      ctx.shadowBlur = 3;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 1;
       ctx.font = `600 ${fontSize}px ${cfg.fontFamily}`;
       ctx.fillStyle = cfg.color;
-      ctx.textAlign = 'center';
+      ctx.textAlign = cfg.textAlign || 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(displayName, 0, 0);
       ctx.restore();
@@ -195,13 +212,18 @@ export const generateIndividualCardBlob = async (
       const targetY = (cfg.topPercent / 100) * 1220;
 
       let fontSize = cfg.baseFontSizePx;
-      if (displayName.length > 20) fontSize = cfg.baseFontSizePx * 0.88;
-      if (displayName.length > 26) fontSize = cfg.baseFontSizePx * 0.78;
+      if (!options.customization?.hasCustomPosition) {
+        if (displayName.length > 20) fontSize = cfg.baseFontSizePx * 0.88;
+        if (displayName.length > 26) fontSize = cfg.baseFontSizePx * 0.78;
+      }
 
       ctx.save();
       ctx.translate(targetX, targetY);
+      if (cfg.rotationDeg) {
+        ctx.rotate((cfg.rotationDeg * Math.PI) / 180);
+      }
 
-      const labelText = 'Guest Name: ';
+      const labelText = cfg.labelPrefix || 'Guest Name: ';
       ctx.font = `italic 500 ${fontSize}px ${cfg.fontFamily}`;
       const labelWidth = ctx.measureText(labelText).width;
 
@@ -234,11 +256,13 @@ export const generateIndividualCardBlob = async (
 
     if (displayName) {
       const targetX = (cfg.leftPercent / 100) * 1024;
-      const targetY = (cfg.topPercent / 100) * 558 - 2;
+      const targetY = (cfg.topPercent / 100) * 558;
 
       let fontSize = cfg.baseFontSizePx;
-      if (displayName.length > 18) fontSize = cfg.baseFontSizePx * 0.88;
-      if (displayName.length > 24) fontSize = cfg.baseFontSizePx * 0.78;
+      if (!options.customization?.hasCustomPosition) {
+        if (displayName.length > 18) fontSize = cfg.baseFontSizePx * 0.88;
+        if (displayName.length > 24) fontSize = cfg.baseFontSizePx * 0.78;
+      }
 
       ctx.save();
       ctx.translate(targetX, targetY);
@@ -247,9 +271,9 @@ export const generateIndividualCardBlob = async (
       }
       ctx.font = `600 ${fontSize}px ${cfg.fontFamily}`;
       ctx.fillStyle = cfg.color;
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(displayName, 0, 0);
+      ctx.textAlign = cfg.textAlign || 'left';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(displayName, 0, -2);
       ctx.restore();
     }
   }

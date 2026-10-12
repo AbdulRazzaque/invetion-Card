@@ -7,6 +7,7 @@ import {
   copyCardBlobToClipboard,
   downloadCardBlob,
   formatGuestDisplayName,
+  CardGuestNameCustomization,
 } from '../utils/individualCardExport';
 import { openWhatsAppDirectly } from '../utils/combinedInvitation';
 import { InvitationData } from '../types/invitation';
@@ -60,13 +61,17 @@ export const useImageExport = () => {
    * Copies ONLY the selected invitation card (1, 2, or 3) with dynamic guest name to clipboard.
    */
   const copyIndividualCard = useCallback(
-    async (cardId: 1 | 2 | 3, data: InvitationData) => {
+    async (
+      cardId: 1 | 2 | 3,
+      data: InvitationData,
+      customization?: CardGuestNameCustomization
+    ) => {
       try {
         setCopyingCardId(cardId);
         setCardErrorMessage((prev) => ({ ...prev, [cardId]: null }));
 
         let blob: Blob | null = null;
-        if (cardId === 2) {
+        if (cardId === 2 && !customization?.hasCustomPosition) {
           const cardElement = document.getElementById('wedding-invitation-card');
           if (cardElement) {
             blob = await getInvitationBlob(cardElement, { pixelRatio: 2.5, quality: 0.98 });
@@ -78,6 +83,7 @@ export const useImageExport = () => {
             guestName: data.guestName,
             guestTitle: data.guestTitle,
             familyMode: data.familyMode,
+            customization,
           });
         }
 
@@ -112,10 +118,14 @@ export const useImageExport = () => {
    * Downloads ONLY the selected invitation card (1, 2, or 3) as a PNG.
    */
   const downloadIndividualCard = useCallback(
-    async (cardId: 1 | 2 | 3, data: InvitationData) => {
+    async (
+      cardId: 1 | 2 | 3,
+      data: InvitationData,
+      customization?: CardGuestNameCustomization
+    ) => {
       try {
         let blob: Blob | null = null;
-        if (cardId === 2) {
+        if (cardId === 2 && !customization?.hasCustomPosition) {
           const cardElement = document.getElementById('wedding-invitation-card');
           if (cardElement) {
             blob = await getInvitationBlob(cardElement, { pixelRatio: 2.5, quality: 0.98 });
@@ -127,6 +137,7 @@ export const useImageExport = () => {
             guestName: data.guestName,
             guestTitle: data.guestTitle,
             familyMode: data.familyMode,
+            customization,
           });
         }
 

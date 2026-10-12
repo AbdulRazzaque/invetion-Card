@@ -14,10 +14,37 @@ import { useInvitation } from '../../hooks/useInvitation';
 import { useImageExport } from '../../hooks/useImageExport';
 import { InvitationEditor } from './InvitationEditor';
 import { InvitationPreview } from './InvitationPreview';
+import { CardGuestNameCustomization } from '../../utils/individualCardExport';
 
 export const InvitationGenerator: React.FC = () => {
   const { data, updateField, resetToDefault, hasChanges } = useInvitation();
   const cardRef = useRef<HTMLDivElement>(null);
+
+  // Independent direct-manipulation text customizations per card (1, 2, 3)
+  const [cardCustomizations, setCardCustomizations] = React.useState<
+    Record<1 | 2 | 3, CardGuestNameCustomization>
+  >({
+    1: {},
+    2: {},
+    3: {},
+  });
+
+  const handleCardCustomizationChange = React.useCallback(
+    (cardId: 1 | 2 | 3, updated: CardGuestNameCustomization) => {
+      setCardCustomizations((prev) => ({
+        ...prev,
+        [cardId]: updated,
+      }));
+    },
+    []
+  );
+
+  const handleCardCustomizationReset = React.useCallback((cardId: 1 | 2 | 3) => {
+    setCardCustomizations((prev) => ({
+      ...prev,
+      [cardId]: {},
+    }));
+  }, []);
 
   const {
     isExporting,
@@ -119,11 +146,11 @@ export const InvitationGenerator: React.FC = () => {
           Desktop: 2-column (Left: Editor, Right: Preview)
           Mobile: Preview first, Editor below
       ================================================== */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 pb-28 lg:pb-12">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto p-4 sm:p-6 lg:p-8 pb-28 lg:pb-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
           
           {/* LEFT COLUMN ON DESKTOP / BOTTOM ON MOBILE: EDITOR */}
-          <section className="order-2 lg:order-1 lg:col-span-5 xl:col-span-5 space-y-6">
+          <section className="order-2 lg:order-1 lg:col-span-4 xl:col-span-4 space-y-6">
             <InvitationEditor
               data={data}
               updateField={updateField}
@@ -141,7 +168,7 @@ export const InvitationGenerator: React.FC = () => {
           </section>
 
           {/* RIGHT COLUMN ON DESKTOP / TOP ON MOBILE: 3 INDEPENDENT CARDS PREVIEW */}
-          <section className="order-1 lg:order-2 lg:col-span-7 xl:col-span-7 flex flex-col items-center lg:sticky lg:top-6">
+          <section className="order-1 lg:order-2 lg:col-span-8 xl:col-span-8 flex flex-col items-center">
             <InvitationPreview
               data={data}
               cardRef={cardRef}
@@ -149,8 +176,11 @@ export const InvitationGenerator: React.FC = () => {
               copyingCardId={copyingCardId}
               copiedCardId={copiedCardId}
               cardErrorMessage={cardErrorMessage}
-              onCopyCard={(cardId) => copyIndividualCard(cardId, data)}
-              onDownloadCard={(cardId) => downloadIndividualCard(cardId, data)}
+              cardCustomizations={cardCustomizations}
+              onCardCustomizationChange={handleCardCustomizationChange}
+              onCardCustomizationReset={handleCardCustomizationReset}
+              onCopyCard={(cardId) => copyIndividualCard(cardId, data, cardCustomizations[cardId])}
+              onDownloadCard={(cardId) => downloadIndividualCard(cardId, data, cardCustomizations[cardId])}
               onWhatsAppDirect={handleWhatsAppDirect}
             />
           </section>
@@ -164,7 +194,7 @@ export const InvitationGenerator: React.FC = () => {
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#FAF7F2]/95 backdrop-blur-md border-t border-[#DFC48A]/60 p-2.5 shadow-lg flex items-center gap-2">
         <button
           type="button"
-          onClick={() => copyIndividualCard(1, data)}
+          onClick={() => copyIndividualCard(1, data, cardCustomizations[1])}
           disabled={copyingCardId === 1}
           className="flex-1 flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl font-sans font-medium text-[12.5px] text-white bg-gradient-to-r from-[#8A6725] to-[#A88235] shadow-sm disabled:opacity-60 cursor-pointer active:scale-[0.98]"
         >
@@ -188,7 +218,7 @@ export const InvitationGenerator: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => copyIndividualCard(2, data)}
+          onClick={() => copyIndividualCard(2, data, cardCustomizations[2])}
           disabled={copyingCardId === 2}
           className="flex-1 flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl font-sans font-medium text-[12.5px] text-white bg-gradient-to-r from-[#8A6725] to-[#A88235] shadow-sm disabled:opacity-60 cursor-pointer active:scale-[0.98]"
         >
@@ -212,7 +242,7 @@ export const InvitationGenerator: React.FC = () => {
 
         <button
           type="button"
-          onClick={() => copyIndividualCard(3, data)}
+          onClick={() => copyIndividualCard(3, data, cardCustomizations[3])}
           disabled={copyingCardId === 3}
           className="flex-1 flex items-center justify-center gap-1.5 py-3 px-2 rounded-xl font-sans font-medium text-[12.5px] text-white bg-gradient-to-r from-[#8A6725] to-[#A88235] shadow-sm disabled:opacity-60 cursor-pointer active:scale-[0.98]"
         >

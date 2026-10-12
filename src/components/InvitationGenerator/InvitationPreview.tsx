@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   ZoomIn,
   ZoomOut,
@@ -13,13 +13,16 @@ import {
   Info,
   Layers,
   FileText,
-  UserCheck
+  UserCheck,
 } from 'lucide-react';
 import { InvitationData } from '../../types/invitation';
 import { InvitationCard } from './InvitationCard';
+import { DirectTextTransformer } from './DirectTextTransformer';
+import { CardSideControls } from './CardSideControls';
 import {
   formatGuestDisplayName,
-  GUEST_NAME_CONFIG
+  GUEST_NAME_CONFIG,
+  CardGuestNameCustomization,
 } from '../../utils/individualCardExport';
 
 interface InvitationPreviewProps {
@@ -29,6 +32,9 @@ interface InvitationPreviewProps {
   copyingCardId: number | null;
   copiedCardId: number | null;
   cardErrorMessage: { [key: number]: string | null };
+  cardCustomizations: Record<1 | 2 | 3, CardGuestNameCustomization>;
+  onCardCustomizationChange: (cardId: 1 | 2 | 3, updated: CardGuestNameCustomization) => void;
+  onCardCustomizationReset: (cardId: 1 | 2 | 3) => void;
   onCopyCard: (cardId: 1 | 2 | 3) => void;
   onDownloadCard: (cardId: 1 | 2 | 3) => void;
   onWhatsAppDirect: () => void;
@@ -41,12 +47,21 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
   copyingCardId,
   copiedCardId,
   cardErrorMessage,
+  cardCustomizations,
+  onCardCustomizationChange,
+  onCardCustomizationReset,
   onCopyCard,
   onDownloadCard,
   onWhatsAppDirect,
 }) => {
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [previewTab, setPreviewTab] = useState<'three-cards' | 'custom-card'>('three-cards');
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [card2Mode, setCard2Mode] = useState<'artwork' | 'html'>('artwork');
+
+  const card1ContainerRef = useRef<HTMLDivElement>(null);
+  const card2ContainerRef = useRef<HTMLDivElement>(null);
+  const card3ContainerRef = useRef<HTMLDivElement>(null);
 
   const guestDisplayName = formatGuestDisplayName(
     data.guestName,
@@ -79,7 +94,7 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
       {/* ==================================================
           PREVIEW HEADER & CONTROLS
       ================================================== */}
-      <div className="w-full max-w-[620px] flex flex-col gap-2.5 pb-3 px-1 sm:px-2">
+      <div className="w-full max-w-6xl flex flex-col gap-2.5 pb-3 px-1 sm:px-2">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="flex h-2.5 w-2.5 relative">
@@ -189,26 +204,45 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
       ================================================== */}
       <div className="w-full flex justify-center items-center overflow-x-auto py-2 px-1">
         <div
-          className="transition-transform duration-200 ease-out origin-top flex flex-col items-center w-full max-w-[620px]"
+          className="transition-transform duration-200 ease-out origin-top flex flex-col items-center w-full max-w-6xl"
           style={{
             transform: `scale(${zoomLevel})`,
           }}
         >
           {previewTab === 'three-cards' ? (
             /* ==================================================
-               THREE INVITATION PREVIEWS (EACH WITH ITS OWN COPY BUTTON)
+               THREE INVITATION PREVIEWS (EACH WITH ITS OWN COPY BUTTON & SIDE CONTROLS)
             ================================================== */
-            <div className="w-full flex flex-col items-center gap-7">
+            <div className="w-full flex flex-col items-center gap-8">
+
+              {/* Dual-Control Text Editor Banner */}
+              <div className="w-full bg-gradient-to-r from-[#F0F7FF] via-[#E6F0FA] to-[#F0F7FF] border border-[#BFDBFE] rounded-xl p-3 px-4 flex items-center justify-between gap-3 shadow-xs text-[12.5px] text-[#1E3A8A] flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#2563EB] animate-pulse shrink-0" />
+                  <span className="font-medium text-[#1E3A8A]">
+                    <strong>Dual-Control Designer:</strong> Every card has its own dedicated <strong>Text Controls Panel</strong> on its right side! You can also click, drag, scale with corner handles, and rotate directly on each invitation image.
+                  </span>
+                </div>
+                {selectedElement && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedElement(null)}
+                    className="shrink-0 px-3 py-1 rounded-md text-[11px] bg-white border border-[#93C5FD] text-[#1D4ED8] hover:bg-[#DBEAFE] shadow-xs cursor-pointer font-semibold transition-colors"
+                  >
+                    Done Editing
+                  </button>
+                )}
+              </div>
 
               {/* --------------------------------------------------
                   INVITATION 1: ROYAL BLUE ARABIC CARD
               -------------------------------------------------- */}
               <div
                 id="invitation-card-1-container"
-                className="w-full bg-[#FCFAF6] border border-[#E8DEC9] rounded-2xl p-3 sm:p-5 shadow-luxury flex flex-col items-center"
+                className="w-full bg-[#FCFAF6] border border-[#E8DEC9] rounded-2xl p-4 sm:p-5 shadow-luxury flex flex-col"
               >
                 {/* Header for Card 1 */}
-                <div className="w-full flex items-center justify-between pb-2 mb-2 border-b border-[#E8DEC9]/70">
+                <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-[#E8DEC9]/70">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-[#8A6725] text-white flex items-center justify-center text-[11px] font-bold">
                       1
@@ -222,125 +256,115 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
                   </span>
                 </div>
 
-                {/* Card 1 Artwork with Dynamic Guest Name rendered directly beside label without overlapping */}
-                <div className="w-full relative rounded-xl overflow-hidden border border-[#DFC48A]/60 shadow-md bg-[#1B2A4A] aspect-[1024/558]">
-                  <img
-                    src="/invitations/card-1.jpg"
-                    alt="Invitation 1 - Royal Blue Arabic Card"
-                    className="w-full h-full object-cover block select-none pointer-events-none"
-                    loading="eager"
-                  />
-
-                  {/* Dynamic Guest Name Overlay at GUEST_NAME_CONFIG[1] coordinates */}
-                  {/* {guestDisplayName && (
+                {/* 2-Column Responsive Body: Left Image & Actions, Right Controls */}
+                <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-5 sm:gap-6 items-start">
+                  {/* LEFT: Card 1 Artwork & Actions */}
+                  <div className="xl:col-span-7 flex flex-col gap-3">
                     <div
-                      className="absolute pointer-events-none select-none flex items-center justify-center overflow-hidden"
-                      style={{
-                        top: `${GUEST_NAME_CONFIG[1].topPercent}%`,
-                        left: `${GUEST_NAME_CONFIG[1].leftPercent}%`,
-                        maxWidth: `${GUEST_NAME_CONFIG[1].maxWidthPercent}%`,
-                        transform: `translate(-50%, -50%) rotate(${GUEST_NAME_CONFIG[1].rotationDeg || 0}deg)`,
-                        transformOrigin: 'center center',
-                      }}
+                      ref={card1ContainerRef}
+                      className="w-full relative rounded-xl overflow-hidden border border-[#DFC48A]/60 shadow-md bg-[#1B2A4A] aspect-[1024/558] cursor-default"
+                      onClick={() => setSelectedElement(null)}
                     >
-                      <span
-                        className="font-cormorant font-semibold select-none whitespace-nowrap text-center tracking-wide"
-                        style={{
-                          color: GUEST_NAME_CONFIG[1].color,
-                          fontSize: GUEST_NAME_CONFIG[1].previewFontSizeRem,
-                          textShadow: '0 1px 2px rgba(0, 0, 0, 0.55)',
-                        }}
-                      >
-                        {guestDisplayName}
-                      </span>
-                    </div>
-                  )} */}
+                      <img
+                        src="/invitations/card-1.jpg"
+                        alt="Invitation 1 - Royal Blue Arabic Card"
+                        className="w-full h-full object-cover block select-none pointer-events-none"
+                        loading="eager"
+                      />
 
-                  {guestDisplayName && (
-                    <div
-                      className="absolute pointer-events-none select-none flex items-center justify-center"
-                      style={{
-                        top: `${GUEST_NAME_CONFIG[1].topPercent}%`,
-                        left: `${GUEST_NAME_CONFIG[1].leftPercent}%`,
-                        width: `${GUEST_NAME_CONFIG[1].maxWidthPercent}%`,
-                        transform: `translate(-50%, -50%) rotate(${GUEST_NAME_CONFIG[1].rotationDeg || 0
-                          }deg)`,
-                        transformOrigin: "center",
-                      }}
-                    >
-                      <span
-                        className="font-cormorant font-semibold text-center"
-                        style={{
-                          color: GUEST_NAME_CONFIG[1].color,
-                          fontSize: `clamp(10px, ${GUEST_NAME_CONFIG[1].previewFontSizeRem}rem, 24px)`,
-                          lineHeight: 1.2,
-                          whiteSpace: "normal",
-                          overflowWrap: "anywhere",
-                          textShadow: "0 1px 2px rgba(0,0,0,0.55)",
-                        }}
-                      >
-                        {guestDisplayName}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* ACTION BUTTONS SPECIFICALLY FOR INVITATION 1 */}
-                <div className="w-full mt-4 flex flex-col gap-2">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    {/* Independent Copy Button for Card 1 */}
-                    <button
-                      type="button"
-                      id="copy-card-1-btn"
-                      onClick={() => onCopyCard(1)}
-                      disabled={copyingCardId === 1}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-sans font-medium text-[14px] text-white bg-gradient-to-r from-[#8A6725] via-[#A88235] to-[#8A6725] hover:from-[#78571B] hover:to-[#78571B] shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] disabled:opacity-75 cursor-pointer"
-                    >
-                      {copyingCardId === 1 ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-white" />
-                          <span>⏳ Copying...</span>
-                        </>
-                      ) : copiedCardId === 1 ? (
-                        <>
-                          <Check className="w-4 h-4 text-emerald-300 stroke-[2.5]" />
-                          <span className="font-semibold text-emerald-100">✓ Image Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4 text-white" />
-                          <span>📋 Copy Image</span>
-                        </>
+                      {guestDisplayName && (
+                        <DirectTextTransformer
+                          cardId={1}
+                          text={guestDisplayName}
+                          customization={cardCustomizations[1]}
+                          defaultConfig={GUEST_NAME_CONFIG[1]}
+                          nativeWidth={1024}
+                          nativeHeight={558}
+                          onChange={(updated) => onCardCustomizationChange(1, updated)}
+                          onReset={() => onCardCustomizationReset(1)}
+                          isSelected={selectedElement === 'card-1-guest'}
+                          onSelect={() => setSelectedElement('card-1-guest')}
+                          onDeselect={() => setSelectedElement(null)}
+                          containerRef={card1ContainerRef}
+                          isExporting={isExporting}
+                        />
                       )}
-                    </button>
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={onWhatsAppDirect}
-                      className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#1E5E3A] bg-[#E9F6EE] hover:bg-[#DCF0E3] border border-[#BDE0CB] shadow-sm transition-colors cursor-pointer"
-                      title="Open WhatsApp to paste and share Invitation 1"
-                    >
-                      <MessageCircle className="w-4 h-4 text-[#25D366]" />
-                      <span>💬 WhatsApp</span>
-                    </button>
+                    {/* ACTION BUTTONS SPECIFICALLY FOR INVITATION 1 */}
+                    <div className="w-full flex flex-col gap-2">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <button
+                          type="button"
+                          id="copy-card-1-btn"
+                          onClick={() => onCopyCard(1)}
+                          disabled={copyingCardId === 1}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-sans font-medium text-[14px] text-white bg-gradient-to-r from-[#8A6725] via-[#A88235] to-[#8A6725] hover:from-[#78571B] hover:to-[#78571B] shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] disabled:opacity-75 cursor-pointer"
+                        >
+                          {copyingCardId === 1 ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-white" />
+                              <span>⏳ Copying...</span>
+                            </>
+                          ) : copiedCardId === 1 ? (
+                            <>
+                              <Check className="w-4 h-4 text-emerald-300 stroke-[2.5]" />
+                              <span className="font-semibold text-emerald-100">✓ Image Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4 text-white" />
+                              <span>📋 Copy Image</span>
+                            </>
+                          )}
+                        </button>
 
-                    <button
-                      type="button"
-                      onClick={() => onDownloadCard(1)}
-                      className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#423214] bg-[#F7F0DE] hover:bg-[#EFE5CD] border border-[#D5C299] shadow-sm transition-colors cursor-pointer"
-                      title="Download Invitation 1 PNG"
-                    >
-                      <Download className="w-4 h-4 text-[#8A6725]" />
-                      <span>⬇ Download Image</span>
-                    </button>
+                        <button
+                          type="button"
+                          onClick={onWhatsAppDirect}
+                          className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#1E5E3A] bg-[#E9F6EE] hover:bg-[#DCF0E3] border border-[#BDE0CB] shadow-sm transition-colors cursor-pointer"
+                          title="Open WhatsApp to paste and share Invitation 1"
+                        >
+                          <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                          <span>💬 WhatsApp</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onDownloadCard(1)}
+                          className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#423214] bg-[#F7F0DE] hover:bg-[#EFE5CD] border border-[#D5C299] shadow-sm transition-colors cursor-pointer"
+                          title="Download Invitation 1 PNG"
+                        >
+                          <Download className="w-4 h-4 text-[#8A6725]" />
+                          <span>⬇ Download Image</span>
+                        </button>
+                      </div>
+
+                      {cardErrorMessage[1] && (
+                        <div className="bg-rose-50 border border-rose-200 rounded-lg p-2 text-[12px] text-rose-800 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                          <span>{cardErrorMessage[1]}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {cardErrorMessage[1] && (
-                    <div className="bg-rose-50 border border-rose-200 rounded-lg p-2 text-[12px] text-rose-800 flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                      <span>{cardErrorMessage[1]}</span>
-                    </div>
-                  )}
+                  {/* RIGHT: Dedicated Text Controls Panel for Card 1 */}
+                  <div className="xl:col-span-5 flex flex-col">
+                    <CardSideControls
+                      cardId={1}
+                      cardTitle="Invitation 1 • Royal Blue Arabic Card"
+                      cardBadge="Front / Main"
+                      guestDisplayName={guestDisplayName}
+                      customization={cardCustomizations[1]}
+                      defaultConfig={GUEST_NAME_CONFIG[1]}
+                      isSelected={selectedElement === 'card-1-guest'}
+                      onSelect={() => setSelectedElement('card-1-guest')}
+                      onDeselect={() => setSelectedElement(null)}
+                      onChange={(updated) => onCardCustomizationChange(1, updated)}
+                      onReset={() => onCardCustomizationReset(1)}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -350,10 +374,10 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
               -------------------------------------------------- */}
               <div
                 id="invitation-card-2-container"
-                className="w-full bg-[#FCFAF6] border border-[#E8DEC9] rounded-2xl p-3 sm:p-5 shadow-luxury flex flex-col items-center"
+                className="w-full bg-[#FCFAF6] border border-[#E8DEC9] rounded-2xl p-4 sm:p-5 shadow-luxury flex flex-col"
               >
                 {/* Header for Card 2 */}
-                <div className="w-full flex items-center justify-between pb-2 mb-2 border-b border-[#E8DEC9]/70">
+                <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-[#E8DEC9]/70 flex-wrap gap-2">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-[#8A6725] text-white flex items-center justify-center text-[11px] font-bold">
                       2
@@ -362,78 +386,154 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
                       Invitation 2 • Reception Ceremony Floral Card
                     </h3>
                   </div>
-                  <span className="text-[10px] text-[#8C6D27] uppercase tracking-wider font-semibold bg-[#FAF0DD] px-2 py-0.5 rounded-md border border-[#DFC48A]/40">
-                    Reception Program
-                  </span>
-                </div>
 
-                {/* Customizable Card 2: Reception Ceremony Floral Card */}
-                <div className="w-full flex justify-center">
-                  <InvitationCard
-                    ref={cardRef}
-                    data={data}
-                    isExporting={isExporting}
-                    className="rounded-xl border border-[#DFC48A]/60 shadow-md"
-                  />
-                </div>
-
-
-                {/* ACTION BUTTONS SPECIFICALLY FOR INVITATION 2 */}
-                <div className="w-full mt-4 flex flex-col gap-2">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    {/* Independent Copy Button for Card 2 */}
+                  {/* Mode Selector for Card 2 */}
+                  <div className="flex items-center gap-1 bg-[#FAF0DD] p-0.5 rounded-lg border border-[#DFC48A]/40 text-[11px]">
                     <button
                       type="button"
-                      id="copy-card-2-btn"
-                      onClick={() => onCopyCard(2)}
-                      disabled={copyingCardId === 2}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-sans font-medium text-[14px] text-white bg-gradient-to-r from-[#8A6725] via-[#A88235] to-[#8A6725] hover:from-[#78571B] hover:to-[#78571B] shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] disabled:opacity-75 cursor-pointer"
+                      onClick={() => setCard2Mode('artwork')}
+                      className={`px-2 py-0.5 rounded font-medium transition-all cursor-pointer ${
+                        card2Mode === 'artwork'
+                          ? 'bg-[#8A6725] text-white shadow-xs'
+                          : 'text-[#8C6D27] hover:bg-[#F2E5C8]'
+                      }`}
                     >
-                      {copyingCardId === 2 ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-white" />
-                          <span>⏳ Copying...</span>
-                        </>
-                      ) : copiedCardId === 2 ? (
-                        <>
-                          <Check className="w-4 h-4 text-emerald-300 stroke-[2.5]" />
-                          <span className="font-semibold text-emerald-100">✓ Image Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4 text-white" />
-                          <span>📋 Copy Image</span>
-                        </>
-                      )}
+                      Stationery Card
                     </button>
-
                     <button
                       type="button"
-                      onClick={onWhatsAppDirect}
-                      className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#1E5E3A] bg-[#E9F6EE] hover:bg-[#DCF0E3] border border-[#BDE0CB] shadow-sm transition-colors cursor-pointer"
-                      title="Open WhatsApp to paste and share Invitation 2"
+                      onClick={() => setCard2Mode('html')}
+                      className={`px-2 py-0.5 rounded font-medium transition-all cursor-pointer ${
+                        card2Mode === 'html'
+                          ? 'bg-[#8A6725] text-white shadow-xs'
+                          : 'text-[#8C6D27] hover:bg-[#F2E5C8]'
+                      }`}
                     >
-                      <MessageCircle className="w-4 h-4 text-[#25D366]" />
-                      <span>💬 WhatsApp</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => onDownloadCard(2)}
-                      className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#423214] bg-[#F7F0DE] hover:bg-[#EFE5CD] border border-[#D5C299] shadow-sm transition-colors cursor-pointer"
-                      title="Download Invitation 2 PNG"
-                    >
-                      <Download className="w-4 h-4 text-[#8A6725]" />
-                      <span>⬇ Download Image</span>
+                      HTML Card
                     </button>
                   </div>
+                </div>
 
-                  {cardErrorMessage[2] && (
-                    <div className="bg-rose-50 border border-rose-200 rounded-lg p-2 text-[12px] text-rose-800 flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                      <span>{cardErrorMessage[2]}</span>
+                {/* 2-Column Responsive Body: Left Image & Actions, Right Controls */}
+                <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-5 sm:gap-6 items-start">
+                  {/* LEFT: Card 2 Artwork / HTML & Actions */}
+                  <div className="xl:col-span-7 flex flex-col gap-3">
+                    <div className="w-full flex justify-center">
+                      {card2Mode === 'artwork' ? (
+                        <div
+                          ref={card2ContainerRef}
+                          className="w-full relative rounded-xl overflow-hidden border border-[#DFC48A]/60 shadow-md bg-[#FAF7F2] aspect-[920/1220] max-w-[460px] mx-auto cursor-default"
+                          onClick={() => setSelectedElement(null)}
+                        >
+                          <img
+                            src="/invitations/card-2.jpg"
+                            alt="Invitation 2 - Reception Ceremony Floral Card"
+                            className="w-full h-full object-cover block select-none pointer-events-none"
+                            loading="eager"
+                          />
+
+                          {guestDisplayName && (
+                            <DirectTextTransformer
+                              cardId={2}
+                              text={`Guest Name: ${guestDisplayName}`}
+                              customization={cardCustomizations[2]}
+                              defaultConfig={GUEST_NAME_CONFIG[2]}
+                              nativeWidth={920}
+                              nativeHeight={1220}
+                              onChange={(updated) => onCardCustomizationChange(2, updated)}
+                              onReset={() => onCardCustomizationReset(2)}
+                              isSelected={selectedElement === 'card-2-guest'}
+                              onSelect={() => setSelectedElement('card-2-guest')}
+                              onDeselect={() => setSelectedElement(null)}
+                              containerRef={card2ContainerRef}
+                              isExporting={isExporting}
+                            />
+                          )}
+                        </div>
+                      ) : (
+                        <InvitationCard
+                          ref={cardRef}
+                          data={data}
+                          isExporting={isExporting}
+                          className="rounded-xl border border-[#DFC48A]/60 shadow-md"
+                        />
+                      )}
                     </div>
-                  )}
+
+                    {/* ACTION BUTTONS SPECIFICALLY FOR INVITATION 2 */}
+                    <div className="w-full flex flex-col gap-2">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <button
+                          type="button"
+                          id="copy-card-2-btn"
+                          onClick={() => onCopyCard(2)}
+                          disabled={copyingCardId === 2}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-sans font-medium text-[14px] text-white bg-gradient-to-r from-[#8A6725] via-[#A88235] to-[#8A6725] hover:from-[#78571B] hover:to-[#78571B] shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] disabled:opacity-75 cursor-pointer"
+                        >
+                          {copyingCardId === 2 ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-white" />
+                              <span>⏳ Copying...</span>
+                            </>
+                          ) : copiedCardId === 2 ? (
+                            <>
+                              <Check className="w-4 h-4 text-emerald-300 stroke-[2.5]" />
+                              <span className="font-semibold text-emerald-100">✓ Image Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4 text-white" />
+                              <span>📋 Copy Image</span>
+                            </>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={onWhatsAppDirect}
+                          className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#1E5E3A] bg-[#E9F6EE] hover:bg-[#DCF0E3] border border-[#BDE0CB] shadow-sm transition-colors cursor-pointer"
+                          title="Open WhatsApp to paste and share Invitation 2"
+                        >
+                          <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                          <span>💬 WhatsApp</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onDownloadCard(2)}
+                          className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#423214] bg-[#F7F0DE] hover:bg-[#EFE5CD] border border-[#D5C299] shadow-sm transition-colors cursor-pointer"
+                          title="Download Invitation 2 PNG"
+                        >
+                          <Download className="w-4 h-4 text-[#8A6725]" />
+                          <span>⬇ Download Image</span>
+                        </button>
+                      </div>
+
+                      {cardErrorMessage[2] && (
+                        <div className="bg-rose-50 border border-rose-200 rounded-lg p-2 text-[12px] text-rose-800 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                          <span>{cardErrorMessage[2]}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* RIGHT: Dedicated Text Controls Panel for Card 2 */}
+                  <div className="xl:col-span-5 flex flex-col">
+                    <CardSideControls
+                      cardId={2}
+                      cardTitle="Invitation 2 • Reception Ceremony Floral Card"
+                      cardBadge="Reception Floral"
+                      guestDisplayName={guestDisplayName}
+                      customization={cardCustomizations[2]}
+                      defaultConfig={GUEST_NAME_CONFIG[2]}
+                      isSelected={selectedElement === 'card-2-guest'}
+                      onSelect={() => setSelectedElement('card-2-guest')}
+                      onDeselect={() => setSelectedElement(null)}
+                      onChange={(updated) => onCardCustomizationChange(2, updated)}
+                      onReset={() => onCardCustomizationReset(2)}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -443,10 +543,10 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
               -------------------------------------------------- */}
               <div
                 id="invitation-card-3-container"
-                className="w-full bg-[#FCFAF6] border border-[#E8DEC9] rounded-2xl p-3 sm:p-5 shadow-luxury flex flex-col items-center"
+                className="w-full bg-[#FCFAF6] border border-[#E8DEC9] rounded-2xl p-4 sm:p-5 shadow-luxury flex flex-col"
               >
                 {/* Header for Card 3 */}
-                <div className="w-full flex items-center justify-between pb-2 mb-2 border-b border-[#E8DEC9]/70">
+                <div className="w-full flex items-center justify-between pb-3 mb-3 border-b border-[#E8DEC9]/70">
                   <div className="flex items-center gap-2">
                     <span className="w-5 h-5 rounded-full bg-[#8A6725] text-white flex items-center justify-center text-[11px] font-bold">
                       3
@@ -460,96 +560,115 @@ export const InvitationPreview: React.FC<InvitationPreviewProps> = ({
                   </span>
                 </div>
 
-                {/* Card 3 Artwork with Dynamic Guest Name rendered directly on the line */}
-                <div className="w-full relative rounded-xl overflow-hidden border border-[#DFC48A]/60 shadow-md bg-[#1B2A4A] aspect-[1024/558]">
-                  <img
-                    src="/invitations/card-3.jpg"
-                    alt="Invitation 3 - English Invitation & Schedule"
-                    className="w-full h-full object-cover block select-none pointer-events-none"
-                    loading="eager"
-                  />
-
-                  {/* Dynamic Guest Name Overlay at GUEST_NAME_CONFIG[3] coordinates */}
-                  {guestDisplayName && (
+                {/* 2-Column Responsive Body: Left Image & Actions, Right Controls */}
+                <div className="w-full grid grid-cols-1 xl:grid-cols-12 gap-5 sm:gap-6 items-start">
+                  {/* LEFT: Card 3 Artwork & Actions */}
+                  <div className="xl:col-span-7 flex flex-col gap-3">
                     <div
-                      className="absolute pointer-events-none select-none flex items-baseline overflow-hidden"
-                      style={{
-                        top: `${GUEST_NAME_CONFIG[3].topPercent}%`,
-                        left: `${GUEST_NAME_CONFIG[3].leftPercent}%`,
-                        maxWidth: `${GUEST_NAME_CONFIG[3].maxWidthPercent}%`,
-                        transform: `translate(0, -90%) rotate(${GUEST_NAME_CONFIG[3].rotationDeg || 0}deg)`,
-                        transformOrigin: 'left bottom',
-                      }}
+                      ref={card3ContainerRef}
+                      className="w-full relative rounded-xl overflow-hidden border border-[#DFC48A]/60 shadow-md bg-[#1B2A4A] aspect-[1024/558] cursor-default"
+                      onClick={() => setSelectedElement(null)}
                     >
-                      <span
-                        className="font-cormorant font-semibold select-none whitespace-nowrap tracking-wide"
-                        style={{
-                          color: GUEST_NAME_CONFIG[3].color,
-                          fontSize: GUEST_NAME_CONFIG[3].previewFontSizeRem,
-                        }}
-                      >
-                        {guestDisplayName}
-                      </span>
-                    </div>
-                  )}
-                </div>
+                      <img
+                        src="/invitations/card-3.jpg"
+                        alt="Invitation 3 - English Invitation & Schedule"
+                        className="w-full h-full object-cover block select-none pointer-events-none"
+                        loading="eager"
+                      />
 
-                {/* ACTION BUTTONS SPECIFICALLY FOR INVITATION 3 */}
-                <div className="w-full mt-4 flex flex-col gap-2">
-                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    {/* Independent Copy Button for Card 3 */}
-                    <button
-                      type="button"
-                      id="copy-card-3-btn"
-                      onClick={() => onCopyCard(3)}
-                      disabled={copyingCardId === 3}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-sans font-medium text-[14px] text-white bg-gradient-to-r from-[#8A6725] via-[#A88235] to-[#8A6725] hover:from-[#78571B] hover:to-[#78571B] shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] disabled:opacity-75 cursor-pointer"
-                    >
-                      {copyingCardId === 3 ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-white" />
-                          <span>⏳ Copying...</span>
-                        </>
-                      ) : copiedCardId === 3 ? (
-                        <>
-                          <Check className="w-4 h-4 text-emerald-300 stroke-[2.5]" />
-                          <span className="font-semibold text-emerald-100">✓ Image Copied</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4 text-white" />
-                          <span>📋 Copy Image</span>
-                        </>
+                      {guestDisplayName && (
+                        <DirectTextTransformer
+                          cardId={3}
+                          text={guestDisplayName}
+                          customization={cardCustomizations[3]}
+                          defaultConfig={GUEST_NAME_CONFIG[3]}
+                          nativeWidth={1024}
+                          nativeHeight={558}
+                          onChange={(updated) => onCardCustomizationChange(3, updated)}
+                          onReset={() => onCardCustomizationReset(3)}
+                          isSelected={selectedElement === 'card-3-guest'}
+                          onSelect={() => setSelectedElement('card-3-guest')}
+                          onDeselect={() => setSelectedElement(null)}
+                          containerRef={card3ContainerRef}
+                          isExporting={isExporting}
+                        />
                       )}
-                    </button>
+                    </div>
 
-                    <button
-                      type="button"
-                      onClick={onWhatsAppDirect}
-                      className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#1E5E3A] bg-[#E9F6EE] hover:bg-[#DCF0E3] border border-[#BDE0CB] shadow-sm transition-colors cursor-pointer"
-                      title="Open WhatsApp to paste and share Invitation 3"
-                    >
-                      <MessageCircle className="w-4 h-4 text-[#25D366]" />
-                      <span>💬 WhatsApp</span>
-                    </button>
+                    {/* ACTION BUTTONS SPECIFICALLY FOR INVITATION 3 */}
+                    <div className="w-full flex flex-col gap-2">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                        <button
+                          type="button"
+                          id="copy-card-3-btn"
+                          onClick={() => onCopyCard(3)}
+                          disabled={copyingCardId === 3}
+                          className="flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-sans font-medium text-[14px] text-white bg-gradient-to-r from-[#8A6725] via-[#A88235] to-[#8A6725] hover:from-[#78571B] hover:to-[#78571B] shadow-md hover:shadow-lg transition-all duration-200 active:scale-[0.99] disabled:opacity-75 cursor-pointer"
+                        >
+                          {copyingCardId === 3 ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin text-white" />
+                              <span>⏳ Copying...</span>
+                            </>
+                          ) : copiedCardId === 3 ? (
+                            <>
+                              <Check className="w-4 h-4 text-emerald-300 stroke-[2.5]" />
+                              <span className="font-semibold text-emerald-100">✓ Image Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-4 h-4 text-white" />
+                              <span>📋 Copy Image</span>
+                            </>
+                          )}
+                        </button>
 
-                    <button
-                      type="button"
-                      onClick={() => onDownloadCard(3)}
-                      className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#423214] bg-[#F7F0DE] hover:bg-[#EFE5CD] border border-[#D5C299] shadow-sm transition-colors cursor-pointer"
-                      title="Download Invitation 3 PNG"
-                    >
-                      <Download className="w-4 h-4 text-[#8A6725]" />
-                      <span>⬇ Download Image</span>
-                    </button>
+                        <button
+                          type="button"
+                          onClick={onWhatsAppDirect}
+                          className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#1E5E3A] bg-[#E9F6EE] hover:bg-[#DCF0E3] border border-[#BDE0CB] shadow-sm transition-colors cursor-pointer"
+                          title="Open WhatsApp to paste and share Invitation 3"
+                        >
+                          <MessageCircle className="w-4 h-4 text-[#25D366]" />
+                          <span>💬 WhatsApp</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onDownloadCard(3)}
+                          className="flex items-center justify-center gap-1.5 py-3 px-3.5 rounded-xl font-sans font-medium text-[13.5px] text-[#423214] bg-[#F7F0DE] hover:bg-[#EFE5CD] border border-[#D5C299] shadow-sm transition-colors cursor-pointer"
+                          title="Download Invitation 3 PNG"
+                        >
+                          <Download className="w-4 h-4 text-[#8A6725]" />
+                          <span>⬇ Download Image</span>
+                        </button>
+                      </div>
+
+                      {cardErrorMessage[3] && (
+                        <div className="bg-rose-50 border border-rose-200 rounded-lg p-2 text-[12px] text-rose-800 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                          <span>{cardErrorMessage[3]}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  {cardErrorMessage[3] && (
-                    <div className="bg-rose-50 border border-rose-200 rounded-lg p-2 text-[12px] text-rose-800 flex items-center gap-2">
-                      <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
-                      <span>{cardErrorMessage[3]}</span>
-                    </div>
-                  )}
+                  {/* RIGHT: Dedicated Text Controls Panel for Card 3 */}
+                  <div className="xl:col-span-5 flex flex-col">
+                    <CardSideControls
+                      cardId={3}
+                      cardTitle="Invitation 3 • English Invitation & Schedule"
+                      cardBadge="Programs Coaster"
+                      guestDisplayName={guestDisplayName}
+                      customization={cardCustomizations[3]}
+                      defaultConfig={GUEST_NAME_CONFIG[3]}
+                      isSelected={selectedElement === 'card-3-guest'}
+                      onSelect={() => setSelectedElement('card-3-guest')}
+                      onDeselect={() => setSelectedElement(null)}
+                      onChange={(updated) => onCardCustomizationChange(3, updated)}
+                      onReset={() => onCardCustomizationReset(3)}
+                    />
+                  </div>
                 </div>
               </div>
 
