@@ -50,10 +50,10 @@ const COLOR_PRESETS_BY_CARD: Record<1 | 2 | 3, { name: string; hex: string }[]> 
     { name: 'Pure White', hex: '#FFFFFF' },
   ],
   3: [
+    { name: 'Royal Navy', hex: '#13213F' },
     { name: 'Espresso Bronze', hex: '#2B2018' },
     { name: 'Rich Black', hex: '#1C1917' },
     { name: 'Antique Sepia', hex: '#4A361C' },
-    { name: 'Royal Navy', hex: '#1B2A4A' },
     { name: 'Luxury Gold', hex: '#D4AF37' },
     { name: 'Warm Bronze', hex: '#6D4E12' },
     { name: 'Pure White', hex: '#FFFFFF' },

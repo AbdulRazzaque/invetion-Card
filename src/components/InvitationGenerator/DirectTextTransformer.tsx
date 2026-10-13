@@ -35,10 +35,10 @@ const COLOR_PRESETS_BY_CARD: Record<1 | 2 | 3, { label: string; value: string }[
     { label: 'Espresso', value: '#2C2218' },
   ],
   3: [
+    { label: 'Royal Navy', value: '#13213F' },
     { label: 'Espresso Bronze', value: '#2B2018' },
     { label: 'Rich Black', value: '#1C1917' },
     { label: 'Antique Sepia', value: '#4A361C' },
-    { label: 'Royal Navy', value: '#1B2A4A' },
   ],
 };
 

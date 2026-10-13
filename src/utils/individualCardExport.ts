@@ -26,17 +26,17 @@ export interface CardGuestNameConfig {
 export const GUEST_NAME_CONFIG: Record<1 | 2 | 3, CardGuestNameConfig> = {
   1: {
     // Card 1: Royal Blue Arabic Card (1024 x 558)
-    // Placed beside "اسم الضيف الكريم :" across the dotted line area (center at X=450, Y=175)
-    topPercent: 31.36, // 175 / 558 * 100
-    leftPercent: 43.95, // 450 / 1024 * 100
+    // Placed beside "اسم الضيف الكريم :" across the dotted line area
+    topPercent: 33.5, // Calibrated default Y position
+    leftPercent: 45.3, // Calibrated default X position
     maxWidthPercent: 26.0,
     textAlign: 'center',
     fontFamily: '"Cormorant Garamond", Georgia, serif',
     fontWeight: 600,
-    color: '#FFFFFF',
-    rotationDeg: 9.0,
-    baseFontSizePx: 22.0,
-    previewFontSizeRem: 'clamp(0.72rem, 1.8vw, 1.05rem)',
+    color: '#F5E6C8', // Calibrated default Champagne color
+    rotationDeg: -10.0, // Calibrated default tilt angle (-10°)
+    baseFontSizePx: 23.0, // Calibrated default font size (23px)
+    previewFontSizeRem: 'clamp(0.75rem, 1.9vw, 1.1rem)',
   },
   2: {
     // Card 2: Reception Ceremony Floral Card (460 x 610 / 2x: 920 x 1220)
@@ -57,17 +57,17 @@ export const GUEST_NAME_CONFIG: Record<1 | 2 | 3, CardGuestNameConfig> = {
   },
   3: {
     // Card 3: Royal Blue English Invitation & Programs (1024 x 558)
-    // Sitting directly on the printed baseline underline right after "Guest Name: " (X=340, Y=170)
-    topPercent: 30.47, // 170 / 558 * 100
-    leftPercent: 33.20, // 340 / 1024 * 100
+    // Sitting directly on the printed baseline underline right after "Guest Name: "
+    topPercent: 31.2, // Calibrated default Y position (31.2%)
+    leftPercent: 34.1, // Calibrated default X position (34.1%)
     maxWidthPercent: 26.0,
     textAlign: 'left',
     fontFamily: '"Cormorant Garamond", Georgia, serif',
     fontWeight: 600,
-    color: '#2B2018', // Deep espresso / bronze
-    rotationDeg: -2.6,
-    baseFontSizePx: 20.0,
-    previewFontSizeRem: 'clamp(0.68rem, 1.7vw, 0.95rem)',
+    color: '#13213F', // Calibrated default deep royal navy color (#13213F)
+    rotationDeg: -4.8, // Calibrated default tilt angle (-4.8°)
+    baseFontSizePx: 18.0, // Calibrated default font size (18px)
+    previewFontSizeRem: 'clamp(0.65rem, 1.6vw, 0.9rem)',
   },
 };
 
