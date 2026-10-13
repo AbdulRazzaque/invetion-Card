@@ -58,8 +58,8 @@ export const GUEST_NAME_CONFIG: Record<1 | 2 | 3, CardGuestNameConfig> = {
   3: {
     // Card 3: Royal Blue English Invitation & Programs (1024 x 558)
     // Sitting directly on the printed baseline underline right after "Guest Name: "
-    topPercent: 31.2, // Calibrated default Y position (31.2%)
-    leftPercent: 34.1, // Calibrated default X position (34.1%)
+    topPercent: 30.7, // Calibrated default Y position (30.7%)
+    leftPercent: 34.6, // Calibrated default X position (34.6%)
     maxWidthPercent: 26.0,
     textAlign: 'left',
     fontFamily: '"Cormorant Garamond", Georgia, serif',
